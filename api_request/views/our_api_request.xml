@@ -40,8 +40,8 @@
                         </pre>
                     </page>
                 </notebook>
-                <chatter/>
             </form>
+            <chatter/>
         </field>
     </record>
 
