@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <menuitem id="root_api_request" name="API request" sequence="10"/>
+    <menuitem id="list_api_request" action="action_view_fields_response" name="List response" parent="root_api_request"/>
+    <menuitem id="create_api_request" parent="root_api_request" groups="base.group_system" action="action_api_request" name="Setting Request" />
+</odoo>

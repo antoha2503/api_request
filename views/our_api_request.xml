@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="our_api_request_list" model="ir.ui.view">
+        <field name="name">our.api.request.list</field>
+        <field name="model">api.request</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+                <field name="url"/>
+                <field name="action" widget="boolean_toggle"/>
+                <field name="status"/>
+                <field name="create_date"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="our_api_request_form" model="ir.ui.view">
+        <field name="name">our.api.request.form</field>
+        <field name="model">api.request</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="test_connection" string="Test Connect" type="object"/>
+                    <field name="status" widget="statusbar"/>
+                </header>
+
+                <group>
+                    <field name="name"/>
+                    <field name="url" widget="url" placeholder="URL('http://', 'https://')"/>
+                    <field name="api_key" placeholder="XXXXXXXX-XXXXXXXX-XXXXXXXX-XXXXXXXX"/>
+                    <field name="action"/>
+                </group>
+                <notebook>
+                    <page string="Columns name">
+                        <field name="columns_name" nolabel="1" colspan="2"/>
+                    </page>
+                    <page string="Result code">
+                        <pre style='background-color: #f8f9fa; padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-family: monospace;'>
+                            <field name="json_code" nolabel="1" colspan="2"/>
+                        </pre>
+                    </page>
+                </notebook>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_api_request" model="ir.actions.act_window">
+        <field name="name">API Request</field>
+        <field name="res_model">api.request</field>
+        <field name="view_mode">list,form</field>
+    </record>
+</odoo>

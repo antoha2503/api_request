@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="view_api_request_list_form" model="ir.ui.view">
+        <field name="name">api.request.list.form</field>
+        <field name="model">view.fields.response</field>
+        <field name="arch" type="xml">
+            <form string="API Dashboard" create="False" edit="false">
+                <sheet>
+                    <!-- Главный контейнер сетки Bootstrap -->
+                    <div class="row">
+                        <!-- ЛЕВАЯ КОЛОНКА: Теперь тут отображается HTML / JSON код (col-md-8 — шире) -->
+                        <div class="col-md-8 border-end">
+                            <h3 class="mb-3" style="color: #7C5BBA;">Деталі та JSON-код</h3>
+                            <!-- Выводим related-поле с кодом. Widget="html" обязателен, чтобы Odoo рендерила теги -->
+                            <field name="table_code_request" widget="html" readonly="1" nolabel="1"/>
+                        </div>
+
+                        <!-- ПРАВАЯ КОЛОНКА: Список имен подключений (col-md-4 — уже) -->
+                        <div class="col-md-4" style="padding-left: 20px;">
+                            <h3 class="mb-3" style="color: #7C5BBA;">Список підключень</h3>
+
+                            <group>
+                                <!-- Основное поле выбора текущего активного подключения -->
+                                <field name="api_request_id" string="Активне підключення" select="one"/>
+                            </group>
+
+                            <p class="text-muted small mt-2">
+                                Оберіть підключення зі списку вище, щоб переглянути його актуальний JSON-код у лівій панелі.
+                            </p>
+                        </div>
+                    </div>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_view_fields_response" model="ir.actions.act_window">
+        <field name="name">List API Request</field>
+        <field name="res_model">view.fields.response</field>
+        <field name="view_mode">form</field>
+<!--        <field name="domain">[('action_request', '=', True)]</field>-->
+    </record>
+</odoo>
