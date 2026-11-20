@@ -18,28 +18,30 @@
         <field name="name">our.api.request.form</field>
         <field name="model">api.request</field>
         <field name="arch" type="xml">
-            <form>
+            <form chatter_position="sided">
                 <header>
                     <button name="test_connection" string="Test Connect" type="object"/>
                     <field name="status" widget="statusbar"/>
                 </header>
 
-                <group>
-                    <field name="name"/>
-                    <field name="url" widget="url" placeholder="URL('http://', 'https://')"/>
-                    <field name="api_key" placeholder="XXXXXXXX-XXXXXXXX-XXXXXXXX-XXXXXXXX"/>
-                    <field name="action"/>
-                </group>
-                <notebook>
-                    <page string="Columns name">
-                        <field name="columns_name" nolabel="1" colspan="2"/>
-                    </page>
-                    <page string="Result code">
-                        <pre style='background-color: #f8f9fa; padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-family: monospace;'>
-                            <field name="json_code" nolabel="1" colspan="2"/>
-                        </pre>
-                    </page>
-                </notebook>
+                <sheet>
+                    <group>
+                        <field name="name"/>
+                        <field name="url" widget="url" placeholder="URL('http://', 'https://')"/>
+                        <field name="api_key" placeholder="XXXXXXXX-XXXXXXXX-XXXXXXXX-XXXXXXXX"/>
+                        <field name="action"/>
+                    </group>
+                    <notebook>
+                        <page string="Columns name">
+                            <field name="columns_name" nolabel="1" colspan="2"/>
+                        </page>
+                        <page string="Result code">
+                            <pre style='background-color: #f8f9fa; padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-family: monospace;'>
+                                <field name="json_code" nolabel="1" colspan="2"/>
+                            </pre>
+                        </page>
+                    </notebook>
+                </sheet>
                 <chatter/>
             </form>
         </field>
