@@ -10,7 +10,13 @@
     'price': "5",
     'currency': 'USD',
     'images': [],
-    "depends": ["base"],
+    "depends": ['base', 'mail', 'web'],
+    "assets": {
+        "web.assets_backend": [
+            "api_request/static/src/js/api_response_dashboard.js",
+            "api_request/static/src/xml/api_response_dashboard.xml",
+        ],
+    },
     "data": [
         "views/list_api_request.xml",
         "views/our_api_request.xml",

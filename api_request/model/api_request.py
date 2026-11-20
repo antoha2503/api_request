@@ -10,8 +10,8 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 class ApiRequest(models.Model):
     _name = 'api.request'
-    _description = 'Our API Request'
     _inherit = ['mail.thread', 'mail.activity.mixin']
+    _description = 'Our API Request'
 
     name = fields.Char("Name", required=True)
     url = fields.Char("URL", required=True)

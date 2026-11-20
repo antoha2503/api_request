@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<templates xml:space="preserve">
+    <t t-name="api_request.ApiResponseDashboard">
+        <div class="o_action">
+            <div class="container-fluid p-4">
+                <div class="card">
+                    <div class="row g-0 p-3">
+                        <section class="col-md-8 border-end pe-4">
+                            <h3 class="mb-3" style="color: #7C5BBA;">Детали и JSON-код</h3>
+                            <t t-if="state.loading">
+                                <p class="text-muted">Загрузка подключений...</p>
+                            </t>
+                            <t t-elif="selectedRequest">
+                                <div t-out="selectedRequest.json_code"/>
+                            </t>
+                            <t t-else="">
+                                <p class="text-muted">Нет подключённых API сервисов.</p>
+                            </t>
+                        </section>
+                        <aside class="col-md-4 ps-4">
+                            <h3 class="mb-3" style="color: #7C5BBA;">Список подключений</h3>
+                            <div class="mb-3">
+                                <label for="api_request_selector" class="form-label">Активное подключение</label>
+                                <select id="api_request_selector" class="form-select"
+                                        t-att-value="state.selectedId || ''"
+                                        t-on-change="(ev) => state.selectedId = Number(ev.target.value)">
+                                    <option t-foreach="state.requests" t-as="request" t-key="request.id"
+                                            t-att-value="request.id" t-esc="request.name"/>
+                                </select>
+                            </div>
+                            <p class="text-muted small">Выберите подключение, чтобы просмотреть его актуальный JSON-код.</p>
+                        </aside>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </t>
+</templates>
