@@ -6,12 +6,19 @@
                 <div class="card">
                     <div class="row g-0 p-3">
                         <section class="col-md-8 border-end pe-4">
-                            <h3 class="mb-3" style="color: #7C5BBA;">Детали и JSON-код</h3>
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h3 class="mb-0" style="color: #7C5BBA;">Детали и JSON-код</h3>
+                                <button t-if="selectedRequest" type="button" class="btn btn-secondary"
+                                        t-on-click="copyCode">
+                                    <i t-att-class="state.copied ? 'fa fa-check me-1' : 'fa fa-copy me-1'"/>
+                                    <t t-esc="state.copied ? 'Скопировано' : 'Копировать код'"/>
+                                </button>
+                            </div>
                             <t t-if="state.loading">
                                 <p class="text-muted">Загрузка подключений...</p>
                             </t>
                             <t t-elif="selectedRequest">
-                                <div t-out="selectedRequest.json_code"/>
+                                <pre class="p-3 bg-light border rounded" style="max-height: 70vh; overflow: auto;"><code t-esc="displayCode"/></pre>
                             </t>
                             <t t-else="">
                                 <p class="text-muted">Нет подключённых API сервисов.</p>
@@ -23,12 +30,12 @@
                                 <label for="api_request_selector" class="form-label">Активное подключение</label>
                                 <select id="api_request_selector" class="form-select"
                                         t-att-value="state.selectedId || ''"
-                                        t-on-change="(ev) => state.selectedId = Number(ev.target.value)">
+                                        t-on-change="onRequestChange">
                                     <option t-foreach="state.requests" t-as="request" t-key="request.id"
                                             t-att-value="request.id" t-esc="request.name"/>
                                 </select>
                             </div>
-                            <p class="text-muted small">Выберите подключение, чтобы просмотреть его актуальный JSON-код.</p>
+                            <p class="text-muted small">Выберите подключение, чтобы просмотреть его JSON-код.</p>
                         </aside>
                     </div>
                 </div>

@@ -138,6 +138,7 @@ class ApiRequest(models.Model):
         url = (self.url or '').strip()
         if not re.match(r'^https?://[^/]+', url):
             self.status = 'no_connection'
+            self.message_post(body='No connection API', subtype_xmlid='mail.mt_note')
             return {
                 'type': 'ir.actions.client',
                 'tag': 'display_notification',
@@ -154,15 +155,18 @@ class ApiRequest(models.Model):
             response.raise_for_status()
             self.status = 'connection'
             self._set_fields_from_response(response)
+            self.message_post(body='Сonnection API', subtype_xmlid='mail.mt_note')
         except requests.exceptions.HTTPError as error:
             self.status = 'no_connection'
             response_text = error.response.text[:500] if error.response is not None else ''
             raise UserError(f"Ошибка HTTP: {error}. Ответ сервера: {response_text}") from error
         except (requests.exceptions.ConnectionError, requests.exceptions.Timeout) as error:
             self.status = 'no_connection'
+            self.message_post(body='No connection API', subtype_xmlid='mail.mt_note')
             raise UserError(f"Не удалось подключиться к серверу: {error}") from error
         except requests.exceptions.RequestException as error:
             self.status = 'no_connection'
+            self.message_post(body='No connection API', subtype_xmlid='mail.mt_note')
             raise UserError(f"Ошибка запроса: {error}") from error
 
         return True
