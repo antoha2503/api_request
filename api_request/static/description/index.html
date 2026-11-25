@@ -1,0 +1,66 @@
+<section class="container py-4">
+    <div class="text-center p-4 mb-4" style="background-color: #f4f0fa; border-radius: 8px;">
+        <h1 style="color: #6f5a9b;">API Request</h1>
+        <p class="lead mb-0">
+            Configure HTTP API endpoints in Odoo and review their JSON or XML responses in one place.
+        </p>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-6 mb-3">
+            <div class="card h-100 p-3">
+                <h3>Configure endpoints</h3>
+                <p class="mb-0">
+                    Add an endpoint URL and an optional API key. Run a connection check and see the current
+                    connection status for each configured service.
+                </p>
+            </div>
+        </div>
+        <div class="col-md-6 mb-3">
+            <div class="card h-100 p-3">
+                <h3>Review API responses</h3>
+                <p class="mb-0">
+                    Inspect formatted JSON or XML responses. Nested JSON objects and arrays are easier to read
+                    in the structured table view.
+                </p>
+            </div>
+        </div>
+        <div class="col-md-6 mb-3">
+            <div class="card h-100 p-3">
+                <h3>Explore response fields</h3>
+                <p class="mb-0">
+                    View the field paths found in JSON and XML responses to understand their structure.
+                </p>
+            </div>
+        </div>
+        <div class="col-md-6 mb-3">
+            <div class="card h-100 p-3">
+                <h3>Copy response data</h3>
+                <p class="mb-0">
+                    Copy the formatted response from the dashboard for further review or use.
+                </p>
+            </div>
+        </div>
+        <div class="col-md-6 mb-3">
+            <div class="card h-100 p-3">
+                <h3>Export tables to Excel</h3>
+                <p class="mb-0">
+                    Download the selected JSON response table as an Excel workbook (.xlsx), including its column headers and rows.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="p-3 mb-3" style="border-left: 4px solid #7c5bba; background-color: #f8f9fa;">
+        <h3>How it works</h3>
+        <ol class="mb-0">
+            <li>Create an API request with the endpoint URL and optional API key.</li>
+            <li>Use <strong>Test Connect</strong> to send a GET request and inspect the response.</li>
+            <li>Open the response dashboard, select a connected service, and switch between Table and JSON.</li>
+        </ol>
+    </div>
+
+    <p class="text-muted small">
+        This module sends HTTP GET requests to read API responses. It does not create or update data on external services.
+    </p>
+</section>
