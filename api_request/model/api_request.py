@@ -87,7 +87,8 @@ class ApiRequest(models.Model):
         try:
             data = response.json()
             pretty_json = json.dumps(data, indent=4, ensure_ascii=False)
-            self.json_code = f"<pre>{escape(pretty_json[:3000])}</pre>"
+            # Храним полный JSON, чтобы не обрезать его и сохранить возможность разобрать для таблицы.
+            self.json_code = f"<pre>{escape(pretty_json)}</pre>"
             keys = self._extract_json_keys(data)
         except (ValueError, requests.exceptions.JSONDecodeError):
             try:

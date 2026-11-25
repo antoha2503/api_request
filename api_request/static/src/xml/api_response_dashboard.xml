@@ -7,18 +7,71 @@
                     <div class="row g-0 p-3">
                         <section class="col-md-8 border-end pe-4">
                             <div class="d-flex justify-content-between align-items-center mb-3">
-                                <h3 class="mb-0" style="color: #7C5BBA;">Детали и JSON-код</h3>
-                                <button t-if="selectedRequest" type="button" class="btn btn-secondary"
-                                        t-on-click="copyCode">
-                                    <i t-att-class="state.copied ? 'fa fa-check me-1' : 'fa fa-copy me-1'"/>
-                                    <t t-esc="state.copied ? 'Скопировано' : 'Копировать код'"/>
-                                </button>
+                                <h3 class="mb-0" style="color: #7C5BBA;">Детали ответа</h3>
+                                <!-- Экспорт скачивает таблицу текущего JSON-ответа как файл XLSX. -->
+                                <div class="d-flex gap-2">
+                                    <button t-if="selectedRequest &amp;&amp; tableData" type="button" class="btn btn-primary"
+                                            t-on-click="exportExcel">
+                                        <i class="fa fa-file-excel-o me-1"/>
+                                        Экспорт в Excel
+                                    </button>
+                                    <button t-if="selectedRequest" type="button" class="btn btn-secondary"
+                                            t-on-click="copyCode">
+                                        <i t-att-class="state.copied ? 'fa fa-check me-1' : 'fa fa-copy me-1'"/>
+                                        <t t-esc="state.copied ? 'Скопировано' : 'Копировать JSON-код'"/>
+                                    </button>
+                                </div>
                             </div>
                             <t t-if="state.loading">
                                 <p class="text-muted">Загрузка подключений...</p>
                             </t>
                             <t t-elif="selectedRequest">
-                                <pre class="p-3 bg-light border rounded" style="max-height: 70vh; overflow: auto;"><code t-esc="displayCode"/></pre>
+                                <!-- Переключатели открывают табличное или исходное представление ответа. -->
+                                <ul class="nav nav-tabs mb-3" role="tablist">
+                                    <li class="nav-item" role="presentation">
+                                        <button type="button" role="tab"
+                                                t-att-class="state.activeTab === 'table' ? 'nav-link active' : 'nav-link'"
+                                                t-att-aria-selected="state.activeTab === 'table'"
+                                                t-on-click="() => state.activeTab = 'table'">
+                                            Таблица
+                                        </button>
+                                    </li>
+                                    <li class="nav-item" role="presentation">
+                                        <button type="button" role="tab"
+                                                t-att-class="state.activeTab === 'json' ? 'nav-link active' : 'nav-link'"
+                                                t-att-aria-selected="state.activeTab === 'json'"
+                                                t-on-click="() => state.activeTab = 'json'">
+                                            JSON
+                                        </button>
+                                    </li>
+                                </ul>
+
+                                <!-- Таблица автоматически строится по полям JSON-ответа. -->
+                                <t t-if="state.activeTab === 'table'">
+                                    <t t-if="tableData">
+                                        <!-- Ограничиваем высоту и включаем прокрутку для длинных таблиц. -->
+                                        <div class="table-responsive" style="max-height: 70vh; overflow: auto;">
+                                            <table class="table table-sm table-striped table-bordered">
+                                                <thead>
+                                                    <tr>
+                                                        <th t-foreach="tableData.columns" t-as="column" t-key="column" t-esc="column"/>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <tr t-foreach="tableData.rows" t-as="row" t-key="row_index">
+                                                        <td t-foreach="row" t-as="cell" t-key="cell_index" t-esc="cell"/>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </t>
+                                    <p t-else="" class="text-muted">Ответ не является JSON, таблицу построить нельзя.</p>
+                                </t>
+
+                                <!-- Полный JSON отображается с отступами и переносами строк. -->
+                                <t t-elif="state.activeTab === 'json'">
+                                    <pre class="p-3 bg-light border rounded" style="max-height: 70vh; overflow: auto;"><code t-esc="displayCode"/></pre>
+                                </t>
                             </t>
                             <t t-else="">
                                 <p class="text-muted">Нет подключённых API сервисов.</p>
@@ -35,7 +88,7 @@
                                             t-att-value="request.id" t-esc="request.name"/>
                                 </select>
                             </div>
-                            <p class="text-muted small">Выберите подключение, чтобы просмотреть его JSON-код.</p>
+                            <p class="text-muted small">Выберите подключение, чтобы просмотреть его ответ.</p>
                         </aside>
                     </div>
                 </div>
