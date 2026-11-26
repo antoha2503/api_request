@@ -1,5 +1,36 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <templates xml:space="preserve">
+    <!-- Рекурсивный компонент раскрывает вложенные JSON-объекты и списки в таблицы. -->
+    <t t-name="api_request.JsonValueTable">
+        <t t-if="isStructured">
+            <button type="button" class="btn btn-link btn-sm p-0 text-start"
+                    t-att-aria-expanded="state.expanded" t-on-click="toggleExpanded">
+                <i t-att-class="state.expanded ? 'fa fa-chevron-down me-1' : 'fa fa-chevron-right me-1'"/>
+                <t t-esc="toggleLabel"/>
+            </button>
+            <div t-if="state.expanded" class="table-responsive border rounded mt-2 p-2"
+                 style="max-height: 40vh; overflow: auto;">
+                <table class="table table-sm table-striped table-bordered mb-0">
+                    <thead>
+                        <tr>
+                            <th t-foreach="tableData.columns" t-as="column" t-key="column" t-esc="column"/>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr t-foreach="tableData.rows" t-as="row" t-key="row_index">
+                            <td t-foreach="row" t-as="cell" t-key="cell_index">
+                                <JsonValueTable value="cell"/>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </t>
+        <t t-else="">
+            <t t-esc="displayValue"/>
+        </t>
+    </t>
+
     <t t-name="api_request.ApiResponseDashboard">
         <div class="o_action">
             <div class="container-fluid p-4">
@@ -59,7 +90,9 @@
                                                 </thead>
                                                 <tbody>
                                                     <tr t-foreach="tableData.rows" t-as="row" t-key="row_index">
-                                                        <td t-foreach="row" t-as="cell" t-key="cell_index" t-esc="cell"/>
+                                                        <td t-foreach="row" t-as="cell" t-key="cell_index">
+                                                            <JsonValueTable value="cell"/>
+                                                        </td>
                                                     </tr>
                                                 </tbody>
                                             </table>
