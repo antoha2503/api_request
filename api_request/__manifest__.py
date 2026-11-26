@@ -1,6 +1,6 @@
 {
     "name": "API Request",
-    "version": "1.0.0",
+    "version": "1.2.0",
     'application': True,
     "category": "Productivity",
     "summary": "Inspect API responses in Odoo and export JSON tables to Excel.",
