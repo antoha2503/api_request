@@ -3,6 +3,66 @@
 import { Component, onWillStart, useState } from "@odoo/owl";
 import { registry } from "@web/core/registry";
 
+// Отдельный компонент отображает вложенные объекты и списки как раскрываемые таблицы.
+class JsonValueTable extends Component {
+    static template = "api_request.JsonValueTable";
+    static props = ["value"];
+    static defaultProps = { value: null };
+
+    setup() {
+        this.state = useState({ expanded: false });
+    }
+
+    get isStructured() {
+        return this.props.value !== null && typeof this.props.value === "object";
+    }
+
+    // Показывает простые значения напрямую, а null — как пустое значение.
+    get displayValue() {
+        return this.props.value === null || this.props.value === undefined
+            ? "—"
+            : String(this.props.value);
+    }
+
+    get toggleLabel() {
+        const count = Array.isArray(this.props.value)
+            ? this.props.value.length
+            : Object.keys(this.props.value || {}).length;
+        const type = Array.isArray(this.props.value) ? "Список" : "Объект";
+        return `${this.state.expanded ? "Скрыть" : "Показать"} ${type.toLowerCase()} (${count})`;
+    }
+
+    // Подготавливает строки вложенного списка или пары «поле — значение» объекта.
+    get tableData() {
+        const value = this.props.value;
+        if (Array.isArray(value)) {
+            const objectRows = value.filter(
+                (item) => item !== null && typeof item === "object" && !Array.isArray(item)
+            );
+            if (objectRows.length === value.length && objectRows.length > 0) {
+                const columns = [...new Set(objectRows.flatMap((item) => Object.keys(item)))];
+                if (columns.length) {
+                    return { columns, rows: objectRows.map((item) => columns.map((key) => item[key])) };
+                }
+                return {
+                    columns: ["Значение"],
+                    rows: objectRows.map((item) => [JSON.stringify(item)]),
+                };
+            }
+            return { columns: ["Значение"], rows: value.map((item) => [item]) };
+        }
+        return {
+            columns: ["Поле", "Значение"],
+            rows: Object.entries(value || {}).map(([key, item]) => [key, item]),
+        };
+    }
+
+    // Переключает отображение вложенной таблицы в ячейке.
+    toggleExpanded() {
+        this.state.expanded = !this.state.expanded;
+    }
+}
+
 class ApiResponseDashboard extends Component {
     static template = "api_request.ApiResponseDashboard";
 
@@ -66,33 +126,23 @@ class ApiResponseDashboard extends Component {
                 }
                 return {
                     columns,
-                    rows: objectRows.map((item) =>
-                        columns.map((column) => this.formatCell(item[column]))
-                    ),
+                    rows: objectRows.map((item) => columns.map((column) => item[column])),
                 };
             }
             return {
                 columns: ["Значение"],
-                rows: value.map((item) => [this.formatCell(item)]),
+                rows: value.map((item) => [item]),
             };
         }
 
         if (value !== null && typeof value === "object") {
             return {
                 columns: ["Поле", "Значение"],
-                rows: Object.entries(value).map(([key, item]) => [key, this.formatCell(item)]),
+                rows: Object.entries(value).map(([key, item]) => [key, item]),
             };
         }
 
-        return { columns: ["Ответ"], rows: [[this.formatCell(value)]] };
-    }
-
-    // Делает вложенные значения JSON читаемыми ячейками таблицы.
-    formatCell(value) {
-        if (value === null || value === undefined) {
-            return "";
-        }
-        return typeof value === "object" ? JSON.stringify(value) : String(value);
+        return { columns: ["Ответ"], rows: [[value]] };
     }
 
     // Форматирует JSON отступами, а остальные ответы оставляет без изменений.
@@ -134,5 +184,9 @@ class ApiResponseDashboard extends Component {
         window.location.href = `/api_request/export_xlsx?${query.toString()}`;
     }
 }
+
+// Регистрируем компонент ячейки для вложенного отображения и для основной таблицы.
+JsonValueTable.components = { JsonValueTable };
+ApiResponseDashboard.components = { JsonValueTable };
 
 registry.category("actions").add("api_request.response_dashboard", ApiResponseDashboard);

@@ -14,7 +14,7 @@ Features
 * Inspect JSON and XML responses, including nested field paths.
 * Browse JSON responses in a table or formatted JSON view.
 * Copy the formatted response to the clipboard.
-* Export the displayed JSON table to an Excel workbook (.xlsx).
+* Export JSON tables to Excel worksheets; nested lists and objects get their own related worksheets.
 
 The module sends GET requests. It is designed for reading and inspecting API responses; it does not provide tools for creating or updating data on external services.
 """,
