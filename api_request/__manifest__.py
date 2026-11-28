@@ -1,6 +1,6 @@
 {
     "name": "API Request",
-    "version": "1.2.0",
+    "version": "1.3.0",
     'application': True,
     "category": "Productivity",
     "summary": "Inspect API responses, import JSON records, and export tables to Excel.",
