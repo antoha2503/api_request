@@ -41,6 +41,12 @@
                                 <h3 class="mb-0" style="color: #7C5BBA;">Детали ответа</h3>
                                 <!-- Экспорт скачивает таблицу текущего JSON-ответа как файл XLSX. -->
                                 <div class="d-flex gap-2">
+                                    <!-- Открывает окно выбора источника JSON, модели Odoo и полей сопоставления. -->
+                                    <button t-if="selectedRequest &amp;&amp; parsedResponse.isJson" groups="base.group_system" type="button" class="btn btn-outline-primary"
+                                            t-on-click="openImport">
+                                        <i class="fa fa-download me-1"/>
+                                        Импорт в Odoo
+                                    </button>
                                     <button t-if="selectedRequest &amp;&amp; tableData" type="button" class="btn btn-primary"
                                             t-on-click="exportExcel">
                                         <i class="fa fa-file-excel-o me-1"/>
@@ -123,6 +129,110 @@
                             </div>
                             <p class="text-muted small">Выберите подключение, чтобы просмотреть его ответ.</p>
                         </aside>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Модальное окно выбирает вложенный источник, модель и соответствия полей импорта. -->
+            <div t-if="state.importOpen" class="modal d-block" tabindex="-1" role="dialog"
+                 style="background-color: rgba(0, 0, 0, 0.35);">
+                <div class="modal-dialog modal-lg modal-dialog-scrollable" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Импорт JSON в Odoo</h5>
+                            <button type="button" class="btn-close" aria-label="Закрыть" t-on-click="closeImport"/>
+                        </div>
+                        <div class="modal-body">
+                            <div t-if="state.importLoading" class="text-muted mb-3">Загрузка моделей и полей...</div>
+                            <div t-if="state.importError" class="alert alert-danger" role="alert">
+                                <t t-esc="state.importError"/>
+                            </div>
+
+                            <div t-if="state.importSources.length" class="mb-3">
+                                <label for="api_import_source" class="form-label">Источник данных JSON</label>
+                                <select id="api_import_source" class="form-select"
+                                        t-att-value="state.importSource" t-on-change="onImportSourceChange">
+                                    <option t-foreach="state.importSources" t-as="source" t-key="source.path"
+                                            t-att-value="source.path" t-att-selected="source.path === state.importSource"
+                                            t-esc="source.label"/>
+                                </select>
+                            </div>
+
+                            <div t-if="state.importModels.length" class="mb-3">
+                                <label for="api_import_model" class="form-label">Целевая модель Odoo</label>
+                                <!-- Поле позволяет искать модель по названию или техническому имени. -->
+                                <input id="api_import_model" type="search" class="form-control"
+                                       autocomplete="off" placeholder="Начните вводить название, например res.partner"
+                                       t-att-value="state.importModelSearch"
+                                       t-att-aria-expanded="state.importModelDropdownOpen"
+                                       t-on-input="onImportModelSearch" t-on-focus="onImportModelFocus"/>
+                                <div t-if="state.importModelDropdownOpen &amp;&amp; filteredImportModels.length"
+                                     class="list-group w-100 shadow mt-1"
+                                     style="max-height: 280px; overflow-y: auto;">
+                                    <button t-foreach="filteredImportModels" t-as="model" t-key="model.model"
+                                            type="button" class="list-group-item list-group-item-action"
+                                            t-att-data-model-name="model.model"
+                                            t-on-click="onImportModelOptionClick"
+                                            t-esc="model.label"/>
+                                </div>
+                                <div t-if="state.importModelDropdownOpen &amp;&amp; !filteredImportModels.length"
+                                     class="list-group w-100 shadow mt-1">
+                                    <div class="list-group-item text-muted">Модели не найдены.</div>
+                                </div>
+                            </div>
+
+                            <t t-if="state.importMappings.length">
+                                <p class="text-muted small">
+                                    Найдено записей: <t t-esc="importRows.length"/>. Совпадающие имена полей сопоставлены автоматически.
+                                </p>
+                                <p t-if="hasStructuredMappings" class="alert alert-info py-2">
+                                    Вложенные списки можно импортировать отдельно, выбрав их в источнике данных.
+                                </p>
+                                <div class="table-responsive">
+                                    <table class="table table-sm table-bordered align-middle">
+                                        <thead>
+                                            <tr>
+                                                <th>Ключ JSON</th>
+                                                <th>Поле модели Odoo</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr t-foreach="state.importMappings" t-as="mapping" t-key="mapping.sourceKey">
+                                                <td>
+                                                    <t t-esc="mapping.sourceKey"/>
+                                                    <span t-if="mapping.isStructured" class="text-muted small"> (вложенные данные)</span>
+                                                </td>
+                                                <td>
+                                                    <select class="form-select form-select-sm"
+                                                            t-att-data-source-key="mapping.sourceKey"
+                                                            t-att-value="mapping.targetField"
+                                                            t-att-disabled="mapping.isStructured || !state.importModel"
+                                                            t-on-change="onImportMappingChange">
+                                                        <option value="">Не импортировать</option>
+                                                        <option t-foreach="state.importFields" t-as="field" t-key="field.name"
+                                                                t-att-value="field.name">
+                                                            <t t-esc="field.label"/> (<t t-esc="field.name"/>)
+                                                            <t t-if="field.required"> — обязательно</t>
+                                                        </option>
+                                                    </select>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <p class="text-muted small mb-0">
+                                    Можно импортировать до 5000 строк за один раз. Вложенные значения и поля отношений пропускаются;
+                                    обязательные поля модели должны иметь значение по умолчанию или быть сопоставлены.
+                                </p>
+                            </t>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" t-on-click="closeImport">Отмена</button>
+                            <button type="button" class="btn btn-primary" t-att-disabled="!canImport || state.importing"
+                                    t-on-click="importJsonData">
+                                <t t-esc="state.importing ? 'Импорт...' : 'Импортировать'"/>
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>

@@ -1,9 +1,9 @@
 {
     "name": "API Request",
-    "version": "1.2.0",
+    "version": "1.0.0",
     'application': True,
     "category": "Productivity",
-    "summary": "Inspect API responses, import JSON records, and export tables to Excel.",
+    "summary": "Inspect API responses in Odoo and export JSON tables to Excel.",
     "description": """
 API Request helps administrators configure HTTP GET endpoints and review their responses directly in Odoo.
 
@@ -15,10 +15,8 @@ Features
 * Browse JSON responses in a table or formatted JSON view.
 * Copy the formatted response to the clipboard.
 * Export JSON tables to Excel worksheets; nested lists and objects get their own related worksheets.
-* Import JSON records into a selected Odoo business model with manual field mapping.
-* Select a nested JSON object list as a separate import source.
 
-The module sends GET requests to external APIs. JSON import creates new Odoo records only; it does not update existing records or create/update data on external services. Relational and nested field values must be imported separately into a suitable model.
+The module sends GET requests. It is designed for reading and inspecting API responses; it does not provide tools for creating or updating data on external services.
 """,
     "author": "TytencoSoft",
     "license": "OPL-1",
