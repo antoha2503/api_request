@@ -50,6 +50,15 @@
                 </p>
             </div>
         </div>
+        <div class="col-md-6 mb-3">
+            <div class="card h-100 p-3">
+                <h3>Import JSON into Odoo</h3>
+                <p class="mb-0">
+                    Choose an Odoo business model, map JSON keys to writable fields, and create records from the selected
+                    response. Nested object lists can be selected and imported separately.
+                </p>
+            </div>
+        </div>
     </div>
 
     <div class="p-3 mb-3" style="border-left: 4px solid #7c5bba; background-color: #f8f9fa;">
@@ -58,10 +67,28 @@
             <li>Create an API request with the endpoint URL and optional API key.</li>
             <li>Use <strong>Test Connect</strong> to send a GET request and inspect the response.</li>
             <li>Open the response dashboard, select a connected service, and switch between Table and JSON.</li>
+            <li>Use <strong>Import to Odoo</strong> to select a JSON source, choose a target model, and map fields before importing.</li>
         </ol>
     </div>
 
     <p class="text-muted small">
-        This module sends HTTP GET requests to read API responses. It does not create or update data on external services.
+        <img src="2026-11-28_130426.png" height="743" width="1672"/>
+        <img src="2026-11-28_130540.png" height="844" width="1674"/>
+        <!--        This module sends HTTP GET requests to read API responses. JSON import creates new records only in Odoo models-->
+<!--        where the current user has create access. Existing records are not updated, and relational fields are not mapped automatically.-->
     </p>
+
+    <div class="p-3 mb-4" style="background-color: #f8f9fa; border-radius: 6px;">
+        <h2>Video walkthrough</h2>
+        <p class="mb-0">A short product walkthrough video will be added here.</p>
+    </div>
+
+    <div class="p-3" style="border-top: 1px solid #dee2e6;">
+        <h2>Contact</h2>
+        <ul class="mb-0">
+            <li>Viber: <a href="tel:+380952671">+380952671</a></li>
+            <li>Email: <a href="mailto:anton.tytenko@gmail.com">anton.tytenko@gmail.com</a></li>
+            <li>GitHub: <a href="https://github.com/antoha2503">github.com/antoha2503</a></li>
+        </ul>
+    </div>
 </section>

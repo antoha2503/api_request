@@ -6,8 +6,8 @@ import { registry } from "@web/core/registry";
 // Отдельный компонент отображает вложенные объекты и списки как раскрываемые таблицы.
 class JsonValueTable extends Component {
     static template = "api_request.JsonValueTable";
+    // Шаблон всегда передаёт value; null и undefined обрабатываются компонентом отдельно.
     static props = ["value"];
-    static defaultProps = { value: null };
 
     setup() {
         this.state = useState({ expanded: false });
@@ -70,8 +70,13 @@ class ApiResponseDashboard extends Component {
         // Состояние хранит список API, выбранное подключение и активную вкладку.
         this.state = useState({
             requests: [], selectedId: null, loading: true, copied: false, activeTab: "table",
+            importOpen: false, importLoading: false, importModels: [], importFields: [],
+            importSources: [], importSource: "", importModel: "", importMappings: [],
+            importModelSearch: "", importModelDropdownOpen: false,
+            importError: "", importing: false,
         });
         this.orm = this.env.services.orm;
+        this.notification = this.env.services.notification;
         onWillStart(async () => {
             this.state.requests = await this.orm.searchRead(
                 "api.request",
@@ -149,6 +154,218 @@ class ApiResponseDashboard extends Component {
     get displayCode() {
         const parsed = this.parsedResponse;
         return parsed.isJson ? JSON.stringify(parsed.value, null, 4) : this.responseText;
+    }
+
+    // Находит корневые записи и вложенные списки объектов, которые можно импортировать отдельно.
+    getImportSources() {
+        const parsed = this.parsedResponse;
+        if (!parsed.isJson) {
+            return [];
+        }
+        const data = parsed.value;
+        const rootRows = Array.isArray(data) ? data : (data && typeof data === "object" ? [data] : []);
+        const sources = [];
+        const sourceByPath = new Map();
+        if (rootRows.length && rootRows.every((item) => item && typeof item === "object" && !Array.isArray(item))) {
+            sources.push({ path: "", label: `Основной JSON (${rootRows.length} записей)`, rows: rootRows });
+            sourceByPath.set("", sources[0]);
+        }
+
+        const visit = (value, path) => {
+            if (Array.isArray(value)) {
+                if (path && value.length && value.every(
+                    (item) => item && typeof item === "object" && !Array.isArray(item)
+                )) {
+                    const source = sourceByPath.get(path);
+                    if (source) {
+                        for (const row of value) {
+                            source.rows.push(row);
+                        }
+                    } else {
+                        const nestedSource = { path, label: `${path} (${value.length} записей)`, rows: [...value] };
+                        sourceByPath.set(path, nestedSource);
+                        sources.push(nestedSource);
+                    }
+                }
+                for (const item of value) {
+                    if (item && typeof item === "object") {
+                        visit(item, path);
+                    }
+                }
+            } else if (value && typeof value === "object") {
+                for (const [key, child] of Object.entries(value)) {
+                    visit(child, path ? `${path}.${key}` : key);
+                }
+            }
+        };
+        visit(data, "");
+        return sources;
+    }
+
+    // Возвращает записи выбранного корневого или вложенного JSON-списка.
+    get importRows() {
+        return this.state.importSources.find((source) => source.path === this.state.importSource)?.rows || [];
+    }
+
+    // Автоматически подбирает поля Odoo с теми же именами и отмечает вложенные значения.
+    rebuildImportMappings() {
+        const sourceKeys = [...new Set(this.importRows.flatMap((row) => Object.keys(row)))];
+        this.state.importMappings = sourceKeys.map((sourceKey) => {
+            const isStructured = this.importRows.some(
+                (row) => row[sourceKey] !== null && typeof row[sourceKey] === "object"
+            );
+            const matchingField = this.state.importFields.find((field) => field.name === sourceKey);
+            return {
+                sourceKey,
+                isStructured,
+                targetField: isStructured ? "" : (matchingField?.name || ""),
+            };
+        });
+    }
+
+    // Загружает доступные цели импорта и открывает окно настройки сопоставлений.
+    async openImport() {
+        this.state.importOpen = true;
+        this.state.importLoading = true;
+        this.state.importError = "";
+        this.state.importModel = "";
+        this.state.importModelSearch = "";
+        this.state.importModelDropdownOpen = false;
+        this.state.importModels = [];
+        this.state.importFields = [];
+        this.state.importMappings = [];
+        this.state.importSources = this.getImportSources();
+        this.state.importSource = this.state.importSources[0]?.path || "";
+        try {
+            this.state.importModels = await this.orm.call(
+                "api.request", "get_import_target_models", []
+            );
+            if (!this.state.importSources.length) {
+                this.state.importError = "В ответе нет списка JSON-объектов для импорта.";
+            } else if (!this.state.importModels.length) {
+                this.state.importError = "Нет доступных моделей, в которые у вас есть право создавать записи.";
+            }
+        } catch (error) {
+            this.state.importError = error.data?.message || error.message || "Не удалось загрузить список моделей Odoo.";
+        } finally {
+            this.state.importLoading = false;
+        }
+    }
+
+    // Открывает варианты моделей, когда пользователь переходит к полю поиска.
+    onImportModelFocus() {
+        this.state.importModelDropdownOpen = true;
+    }
+
+    // Фильтрует модели по введённому тексту и сбрасывает старый выбор при редактировании.
+    onImportModelSearch(event) {
+        this.state.importModelSearch = event.target.value;
+        this.state.importModel = "";
+        this.state.importFields = [];
+        this.state.importMappings = [];
+        this.state.importError = "";
+        this.state.importModelDropdownOpen = true;
+    }
+
+    // Передаёт выбранную модель в загрузчик полей с контекстом компонента.
+    onImportModelOptionClick(event) {
+        return this.selectImportModel(event.currentTarget.dataset.modelName);
+    }
+
+    // Загружает доступные поля выбранной модели и подготавливает автоматические соответствия.
+    async selectImportModel(modelName) {
+        const model = this.state.importModels.find((item) => item.model === modelName);
+        if (!model) {
+            return;
+        }
+        this.state.importModel = model.model;
+        this.state.importModelSearch = model.label;
+        this.state.importModelDropdownOpen = false;
+        this.state.importFields = [];
+        this.state.importMappings = [];
+        this.state.importError = "";
+        this.state.importLoading = true;
+        try {
+            this.state.importFields = await this.orm.call(
+                "api.request", "get_import_target_fields", [model.model]
+            );
+            this.rebuildImportMappings();
+        } catch (error) {
+            this.state.importError = error.data?.message || error.message || "Не удалось загрузить поля модели.";
+        } finally {
+            this.state.importLoading = false;
+        }
+    }
+
+    // Пересобирает список ключей при выборе другого массива в исходном JSON.
+    onImportSourceChange(event) {
+        this.state.importSource = event.target.value;
+        this.rebuildImportMappings();
+    }
+
+    // Сохраняет выбранное пользователем соответствие одного JSON-ключа полю Odoo.
+    onImportMappingChange(event) {
+        const mapping = this.state.importMappings.find(
+            (item) => item.sourceKey === event.target.dataset.sourceKey
+        );
+        if (mapping) {
+            mapping.targetField = event.target.value;
+        }
+    }
+
+    // Разрешает запуск только когда выбрана цель и задано хотя бы одно поле.
+    get canImport() {
+        return Boolean(
+            this.state.importModel &&
+            this.importRows.length &&
+            this.state.importMappings.some((mapping) => mapping.targetField && !mapping.isStructured)
+        );
+    }
+
+    // Фильтрует список доступных целей по названию модели или её техническому имени.
+    get filteredImportModels() {
+        const query = this.state.importModelSearch.trim().toLowerCase();
+        return this.state.importModels
+            .filter((model) => !query || `${model.label} ${model.model}`.toLowerCase().includes(query))
+            .slice(0, 100);
+    }
+
+    // Показывает подсказку, если источник содержит вложенные объекты или списки.
+    get hasStructuredMappings() {
+        return this.state.importMappings.some((item) => item.isStructured);
+    }
+
+    // Отправляет выбранные JSON-строки и сопоставления в Odoo для создания записей.
+    async importJsonData() {
+        if (!this.canImport || this.state.importing) {
+            return;
+        }
+        this.state.importing = true;
+        this.state.importError = "";
+        const mapping = Object.fromEntries(
+            this.state.importMappings
+                .filter((item) => item.targetField && !item.isStructured)
+                .map((item) => [item.sourceKey, item.targetField])
+        );
+        try {
+            const result = await this.orm.call(
+                "api.request",
+                "import_json_records",
+                [this.state.importModel, this.importRows, mapping]
+            );
+            this.notification.add(`Импортировано записей: ${result.count}`, { type: "success" });
+            this.closeImport();
+        } catch (error) {
+            this.state.importError = error.data?.message || error.message || "Импорт завершился с ошибкой.";
+        } finally {
+            this.state.importing = false;
+        }
+    }
+
+    // Закрывает окно импорта и очищает его временное состояние.
+    closeImport() {
+        this.state.importOpen = false;
+        this.state.importError = "";
     }
 
     onRequestChange(event) {
